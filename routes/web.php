@@ -56,3 +56,11 @@ Route::get('/ratecard', function () {
     
     return view('ratecard');
 })->name('ratecard');
+
+Route::get('/terms', function () {
+    return view('terms');
+})->name('terms');
+
+Route::get('/privacy', function () {
+    return view('privacy');
+})->name('privacy');

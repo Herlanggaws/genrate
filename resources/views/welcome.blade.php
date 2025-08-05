@@ -134,6 +134,14 @@
         <!-- Footer -->
         <footer class="text-center text-sm text-gray-500 mt-8">
             <p>&copy; {{ date('Y') }} GenRate. Generate professional rate cards for social media influencers.</p>
+            <div class="mt-4 flex justify-center gap-6">
+                <a href="{{ route('terms') }}" class="text-gray-500 hover:text-gray-700 transition duration-150 ease-in-out">
+                    Terms of Use
+                </a>
+                <a href="{{ route('privacy') }}" class="text-gray-500 hover:text-gray-700 transition duration-150 ease-in-out">
+                    Privacy Policy
+                </a>
+            </div>
         </footer>
 
     </div>
