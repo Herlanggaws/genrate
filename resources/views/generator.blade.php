@@ -77,6 +77,19 @@
                 <span id="success-text"></span>
             </div>
 
+            <!-- Session Messages -->
+            @if(session('success'))
+                <div class="mt-4 p-4 rounded-lg text-sm bg-green-100 text-green-800">
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="mt-4 p-4 rounded-lg text-sm bg-red-100 text-red-800">
+                    {{ session('error') }}
+                </div>
+            @endif
+
             <form id="generator-form" class="space-y-6" method="POST" action="{{ route('generator.analyze') }}">
                 @csrf
                 
@@ -114,14 +127,50 @@
                                 TikTok Username
                             </div>
                         </label>
-                        <input 
-                            type="text" 
-                            id="tiktok" 
-                            name="tiktok"
-                            placeholder="@tiktok_username" 
-                            class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 text-sm"
-                            value="{{ old('tiktok') }}"
-                        >
+                        
+                        @if(session('tiktok_profile'))
+                            <!-- Connected TikTok Account -->
+                            <div class="mt-1 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-black rounded-full flex items-center justify-center">
+                                            <span class="text-white text-sm font-bold">TT</span>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-900">{{ session('tiktok_profile.display_name') ?? 'TikTok User' }}</p>
+                                            <p class="text-xs text-gray-600">{{ number_format(session('tiktok_profile.follower_count') ?? 0) }} followers</p>
+                                        </div>
+                                    </div>
+                                    <a href="{{ route('tiktok.disconnect') }}" class="text-xs text-red-600 hover:text-red-800 font-medium">
+                                        Disconnect
+                                    </a>
+                                </div>
+                            </div>
+                            <input type="hidden" name="tiktok" value="{{ session('tiktok_profile.display_name') ?? '' }}">
+                        @else
+                            <!-- TikTok Connect Button and Manual Input -->
+                            <div class="space-y-3">
+                                <a href="{{ route('tiktok.connect') }}" 
+                                   class="w-full flex items-center justify-center gap-2 px-4 py-3 border border-black rounded-lg text-sm font-medium text-black bg-white hover:bg-gray-50 transition duration-150 ease-in-out">
+                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.05-2.83-.14-4.08-.72-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
+                                    </svg>
+                                    Connect TikTok Account
+                                </a>
+                                <div class="text-center">
+                                    <span class="text-xs text-gray-500">or</span>
+                                </div>
+                                <input 
+                                    type="text" 
+                                    id="tiktok" 
+                                    name="tiktok"
+                                    placeholder="@tiktok_username" 
+                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 text-sm"
+                                    value="{{ old('tiktok') }}"
+                                >
+                            </div>
+                        @endif
+                        
                         @error('tiktok')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror

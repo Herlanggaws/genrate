@@ -6,56 +6,11 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-Route::get('/generator', function () {
-    return view('generator');
-})->name('generator');
-
-Route::post('/generator/analyze', function () {
-    // Validate the form data
-    $validated = request()->validate([
-        'instagram' => 'nullable|string|max:255',
-        'tiktok' => 'nullable|string|max:255',
-        'youtube' => 'nullable|string|max:255',
-    ]);
-
-    // Check if at least one field is provided
-    if (empty($validated['instagram']) && empty($validated['tiktok']) && empty($validated['youtube'])) {
-        return back()->withErrors(['general' => 'Please enter at least one username or URL.'])->withInput();
-    }
-
-    // Store the data in session for the next step
-    session(['user_profiles' => $validated]);
-
-    // Redirect to preview page
-    return redirect()->route('preview');
-})->name('generator.analyze');
-
-Route::get('/preview', function () {
-    // Check if user has submitted profile data
-    if (!session()->has('user_profiles')) {
-        return redirect()->route('generator')->with('error', 'Please submit your profile information first.');
-    }
-    
-    return view('preview');
-})->name('preview');
-
-Route::get('/payment', function () {
-    // Check if user has viewed preview
-    if (!session()->has('user_profiles')) {
-        return redirect()->route('generator')->with('error', 'Please complete the previous steps first.');
-    }
-    
-    return view('payment');
-})->name('payment');
-
-Route::get('/ratecard', function () {
-    // Check if user has completed payment simulation
-    if (!session()->has('user_profiles')) {
-        return redirect()->route('generator')->with('error', 'Please complete the previous steps first.');
-    }
-    
-    return view('ratecard');
-})->name('ratecard');
+Route::get('/generator', [App\Http\Controllers\GeneratorController::class, 'show'])->name('generator');
+Route::post('/generator/analyze', [App\Http\Controllers\GeneratorController::class, 'analyze'])->name('generator.analyze');
+Route::get('/preview', [App\Http\Controllers\GeneratorController::class, 'preview'])->name('preview');
+Route::get('/payment', [App\Http\Controllers\GeneratorController::class, 'payment'])->name('payment');
+Route::get('/ratecard', [App\Http\Controllers\GeneratorController::class, 'ratecard'])->name('ratecard');
 
 Route::get('/terms', function () {
     return view('terms');
@@ -64,3 +19,8 @@ Route::get('/terms', function () {
 Route::get('/privacy', function () {
     return view('privacy');
 })->name('privacy');
+
+// TikTok OAuth Routes
+Route::get('/tiktok/connect', [App\Http\Controllers\TikTokController::class, 'redirect'])->name('tiktok.connect');
+Route::get('/tiktok/callback', [App\Http\Controllers\TikTokController::class, 'callback'])->name('tiktok.callback');
+Route::get('/tiktok/disconnect', [App\Http\Controllers\TikTokController::class, 'disconnect'])->name('tiktok.disconnect');
