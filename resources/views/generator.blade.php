@@ -316,6 +316,9 @@
                 }, 1500);
             });
         });
+        
+        // Include TikTok SDK fix
+        @include('partials.tiktok-sdk-fix')
     </script>
 
 </body>

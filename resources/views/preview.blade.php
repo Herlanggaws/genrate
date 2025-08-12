@@ -262,5 +262,8 @@
 
     </div>
 
+    <!-- Include TikTok SDK fix -->
+    @include('partials.tiktok-sdk-fix')
+
 </body>
 </html>

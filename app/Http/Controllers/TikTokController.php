@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Log;
 
 class TikTokController extends Controller
 {
@@ -29,13 +30,28 @@ class TikTokController extends Controller
         $state = bin2hex(random_bytes(16));
         Session::put('tiktok_state', $state);
         
-        $authUrl = config('tiktok.auth_url') . '?' . http_build_query([
+        // PKCE Challenge
+        $codeVerifier = bin2hex(random_bytes(64));
+        Session::put('tiktok_code_verifier', $codeVerifier);
+        $codeChallenge = rtrim(strtr(base64_encode(hash('sha256', $codeVerifier, true)), '+/', '-_'), '=');
+        
+        $queryParams = [
             'client_key' => $this->clientKey,
             'scope' => implode(',', config('tiktok.scopes')),
             'response_type' => 'code',
             'redirect_uri' => $this->redirectUri,
             'state' => $state,
-        ]);
+            'code_challenge' => $codeChallenge,
+            'code_challenge_method' => 'S256',
+        ];
+
+        $authUrl = config('tiktok.auth_url') . '?';
+        foreach ($queryParams as $key => $value) {
+            $authUrl .= $key . '=' . urlencode($value) . '&';
+        }
+        $authUrl = rtrim($authUrl, '&');
+
+        Log::info('Redirecting to TikTok for authorization: ' . $authUrl);
 
         return redirect($authUrl);
     }
@@ -57,12 +73,13 @@ class TikTokController extends Controller
 
         try {
             // Exchange code for access token
-            $response = Http::asForm()->post($this->baseUrl . '/oauth/token/', [
+            $response = Http::asForm()->post(config('tiktok.token_url'), [
                 'client_key' => $this->clientKey,
                 'client_secret' => $this->clientSecret,
                 'code' => $code,
                 'grant_type' => 'authorization_code',
                 'redirect_uri' => $this->redirectUri,
+                'code_verifier' => Session::pull('tiktok_code_verifier'),
             ]);
 
             if ($response->successful()) {
@@ -105,7 +122,7 @@ class TikTokController extends Controller
             }
         } catch (\Exception $e) {
             // Log error but don't fail the entire flow
-            \Log::error('Failed to fetch TikTok profile: ' . $e->getMessage());
+            Log::error('Failed to fetch TikTok profile: ' . $e->getMessage());
         }
     }
 
@@ -137,7 +154,7 @@ class TikTokController extends Controller
                 return true;
             }
         } catch (\Exception $e) {
-            \Log::error('Failed to refresh TikTok token: ' . $e->getMessage());
+            Log::error('Failed to refresh TikTok token: ' . $e->getMessage());
         }
 
         return false;
@@ -172,7 +189,7 @@ class TikTokController extends Controller
                     'token' => $accessToken,
                 ]);
             } catch (\Exception $e) {
-                \Log::error('Failed to revoke TikTok token: ' . $e->getMessage());
+                Log::error('Failed to revoke TikTok token: ' . $e->getMessage());
             }
         }
 
